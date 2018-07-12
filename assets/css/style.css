@@ -1,10 +1,14 @@
-.animal-button {
+.animal-button, #moar {
     background-color: #4aaaa5;
     margin: 10px;
     color: white;
     font-size: 16px;
     border-radius: 8px;
     padding: 0px 20px;
+}
+
+#moar {
+    margin: 10px 0;
 }
 
 input[type="text"] {
