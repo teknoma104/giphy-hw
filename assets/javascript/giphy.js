@@ -1,6 +1,6 @@
 // Stores the name of all animals that were preset + new ones the user can/will enter in
-var existingAnimalButtons = ["dog", "cat", "rabbit", "hamster", "skunk", "goldfish", "bird", "ferret", "turtle", "sugar glider", "chinchilla", "hedeghog", "hermit crab", "gerbil",
-    "pgymy goat", "chicken", "capybara", "teacup pig", "serval", "salamander", "frog"];
+var existingAnimalButtons = ["dog", "cat", "rabbit", "hamster", "skunk", "goldfish", "bird", "ferret", "turtle", "sugar glider", "chinchilla", "hedgehog", "hermit crab", "gerbil",
+    "pygmy goat", "chicken", "capybara", "teacup pig", "serval", "salamander", "frog"];
 
 // Used to store favorite list of GIFs as an array of objects 
 var savedFavorites = JSON.parse(localStorage.getItem("favoriteGIFObject"));
