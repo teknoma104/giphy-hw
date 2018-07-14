@@ -1,9 +1,28 @@
+// Stores the name of all animals that were preset + new ones the user can/will enter in
 var existingAnimalButtons = ["dog", "cat", "rabbit", "hamster", "skunk", "goldfish", "bird", "ferret", "turtle", "sugar glider", "chinchilla", "hedeghog", "hermit crab", "gerbil",
     "pgymy goat", "chicken", "capybara", "teacup pig", "serval", "salamander", "frog"];
 
+// Used to store favorite list of GIFs as an array of objects 
+var savedFavorites = JSON.parse(localStorage.getItem("favoriteGIFObject"));
+
+// internalCounter variable is used to help with the add +10 gif button
+// since the AJAX query call gets 10 at a time, this counter is used as
+// an index to keep pushing the AJAX query to the next data objects
 var internalCounter = 0;
+
+// Variable used to keep track of the animal button that was last clicked,
+// this is to help facilitate the +10 more gif button so we can pass this
+// variable as the query topic in the AJAX call
 var globalAnimal;
 
+// Variable used in the favorites area, it is used as a counter+index for each
+// favorite gif added to the favorites area
+var indexCounter = 0;
+
+
+// First function that gets called when the document loads
+// Using existingAnimalButtons variable, it generates buttons for each animal
+// in the array
 function generateExistingAnimalButtons() {
     $("#top-row").empty();
 
@@ -20,6 +39,9 @@ function generateExistingAnimalButtons() {
     }
 }
 
+
+// Function that gets called when an animal button gets clicked at the top of the page
+// Whatever animal name is shown on the button, it will display 10 GIFs related to that animal
 $(document).on("click", ".animal-button", function () {
     console.log("animal button clicked");
 
@@ -29,13 +51,16 @@ $(document).on("click", ".animal-button", function () {
 
     var readAnimalName = $(this).attr("animalID");
 
-    
     globalAnimal = readAnimalName;
     internalCounter = 10;
 
     console.log("globalAnimal is: " + globalAnimal);
     console.log("readAnimalName: " + readAnimalName);
 
+    // Different method of putting together the query URL
+    // I saw this method used in the New York Times API example and thought it was much easier to work with
+    // because you're not concatenating strings, instead you are just assigning values to different parameters
+    // which makes it easier to edit the parameters
     var url = "https://api.giphy.com/v1/gifs/search";
     url += '?' + $.param({
         'api_key': "OlI2yq3pYhsQKi6Vx54oNO0YI17mxE5h",
@@ -51,26 +76,30 @@ $(document).on("click", ".animal-button", function () {
 
         for (var x = 0; x < result.data.length; x++) {
 
-            console.log("Entering loop");
+            console.log("Entering for loop from ajax call");
 
-            var newDiv = $("<div>");
-            newDiv.attr("class", "animal-list");
+            var newDiv = $("<div>").attr("class", "animal-list");
             var animalIMG = $("<img>");
 
-            // var saveButton = $("<button").text("Save GIF").attr("onclick", "save()");
+            // Used awesomefont icon to represent favoriting an item with a Heart icon that will overlay the GIF in the top left corner
+            var favIcon = $("<p>").html("<i class='fas fa-heart'></i>").attr("class", "favicon");
 
-            var saveLink = $("<a>").text("Click here to download image").attr( { href: result.data[x].images.fixed_height.url,  download : globalAnimal+".gif" } );
-
+            // var saveButton = $("<button>").text("Save GIF").attr("onclick", "save()");
+            // var saveLink = $("<a>").text("Click here to download image").attr( { href: result.data[x].images.fixed_height.url, download : globalAnimal+".gif" } );
             // onclick: "this.href = $('.animal-list img:first').attr('src')",
 
-            var title = $("<p>").text("Title: " + result.data[x].title);
-            var rating = $("<p>").text("Rating: " + result.data[x].rating);
-            // var slug = $("<p>").text("Slug: " + result.data[x].slug);
-            var sauce = $("<p>").text("Giphy Source: " + result.data[x].bitly_gif_url);
+            var title = $("<p>").text("Title: " + result.data[x].title).attr("class", "title");
+            var rating = $("<p>").text("Rating: " + result.data[x].rating).attr("class", "rating");
+
+            var sauceHREF = result.data[x].bitly_gif_url;
+
+            var sauceAnchor = $("<a>").attr({ href: sauceHREF, target: "_blank" }).text(sauceHREF);
+
+            var sauce = $("<p>").text("Giphy Source: ").attr("class", "sauce");
+            sauce.append(sauceAnchor);
+
             var imgStill = result.data[x].images.fixed_height_still.url;
             var imgAnimate = result.data[x].images.fixed_height.url;
-
-        
 
             animalIMG.attr({
                 "src": imgStill,
@@ -82,18 +111,15 @@ $(document).on("click", ".animal-button", function () {
 
             newDiv.append(title);
             newDiv.append(rating);
-            // newDiv.append(slug);
             newDiv.append(sauce);
             newDiv.append(animalIMG);
-            // newDiv.append(saveButton);
-            newDiv.append(saveLink);
+            newDiv.append(favIcon);
 
             $("#animals").append(newDiv);
 
 
             console.log(result.data[x].title);
             console.log(result.data[x].rating);
-            console.log(result.data[x].slug);
             console.log(result.data[x].source);
             console.log(result.data[x].images.fixed_height.url);
             console.log(result.data[x].images.fixed_height_still.url);
@@ -104,7 +130,9 @@ $(document).on("click", ".animal-button", function () {
 });
 
 
-
+// Click listener event for the Submit button
+// Takes the value typed in the text box and appends a button to list
+// of animal buttons at the top
 $(document).on("click", "#addAnimal", function () {
     console.log("clicked");
 
@@ -118,13 +146,12 @@ $(document).on("click", "#addAnimal", function () {
         alert("Empty submit box, please type in a valid animal");
     else {
         existingAnimalButtons.push(queryAnimal);
-
         generateExistingAnimalButtons();
-
     }
-
 });
 
+// Function to add 10 more GIFs of the last animal button that was clicked
+// uses the internalCounter variable to set the range of query results
 $(document).on("click", "#moar", function () {
     console.log("add 10 more gifs clicked");
 
@@ -146,20 +173,26 @@ $(document).on("click", "#moar", function () {
         console.log(result);
         console.log(result.data.length);
 
-        for (var x = internalCounter - 1; x < result.data.length; x++) {
+        // I used the starting index at internalCounter so we will get the next 10 GIFs that are newer
+        for (var x = internalCounter; x < result.data.length; x++) {
 
-            console.log("Entering loop");
+            console.log("Entering for loop for adding +10 more gifs");
 
-            var newDiv = $("<div>");
-            newDiv.attr("class", "animals");
+            var newDiv = $("<div>").attr("class", "animal-list");
             var animalIMG = $("<img>");
 
-            var saveButton = $("<button").text("Save GIF").attr("onclick", "save()");
+            var favIcon = $("<p>").html("<i class='fas fa-heart'></i>").attr("class", "favicon");
 
-            var title = $("<p>").text("Title: " + result.data[x].title);
-            var rating = $("<p>").text("Rating: " + result.data[x].rating);
-            // var slug = $("<p>").text("Slug: " + result.data[x].slug);
-            var sauce = $("<p>").text("Giphy Source: " + result.data[x].bitly_gif_url);
+            var title = $("<p>").text("Title: " + result.data[x].title).attr("class", "title");
+            var rating = $("<p>").text("Rating: " + result.data[x].rating).attr("class", "rating");
+
+            var sauceHREF = result.data[x].bitly_gif_url;
+
+            var sauceAnchor = $("<a>").attr({ href: sauceHREF, target: "_blank" }).text(sauceHREF);
+
+            var sauce = $("<p>").text("Giphy Source: ").attr("class", "sauce");
+            sauce.append(sauceAnchor);
+
             var imgStill = result.data[x].images.fixed_height_still.url;
             var imgAnimate = result.data[x].images.fixed_height.url;
 
@@ -173,30 +206,29 @@ $(document).on("click", "#moar", function () {
 
             newDiv.append(title);
             newDiv.append(rating);
-            // newDiv.append(slug);
             newDiv.append(sauce);
             newDiv.append(animalIMG);
-            newDiv.append(saveButton);
+            newDiv.append(favIcon);
+            // newDiv.append(saveButton);
 
             $("#animals").prepend(newDiv);
 
 
             console.log(result.data[x].title);
             console.log(result.data[x].rating);
-            console.log(result.data[x].slug);
             console.log(result.data[x].source);
             console.log(result.data[x].images.fixed_height.url);
             console.log(result.data[x].images.fixed_height_still.url);
         }
-
+        // Increments internalCounter by 10 for the next time this click function is called
         internalCounter += 10;
     }).fail(function (err) {
         throw err;
     });
 });
 
-
-$("#animals").on("click", ".animal-image", function () {
+// Reused the example given from a in-class activity involving pausing/unpausing GIFs
+$(document).on("click", ".animal-image", function () {
     // The attr jQuery method allows us to get or set the value of any attribute on our HTML element
     var state = $(this).attr("data-state");
     // If the clicked image's state is still, update its src attribute to what its data-animate value is.
@@ -211,8 +243,178 @@ $("#animals").on("click", ".animal-image", function () {
     }
 });
 
+// Bonus Goal of adding a GIF you want to save into Favorites section 
+$("#animals").on("click", ".favicon", function () {
+    console.log("favorite button clicked");
+
+    // Testing and console.log'ing some new methods I learned about grabbing the nearest tag/object and getting their attribute values
+    console.log("trying to get src: " + $(this).closest("div.animal-list").find("img.animal-image").attr("src"));
+    console.log("trying to get src: " + $(this).closest('.animal-list').find('img.animal-image').attr('src'));
+    console.log("trying to get still: " + $(this).closest('.animal-list').find('img.animal-image').attr('data-still'));
+    console.log("trying to get animate: " + $(this).closest('.animal-list').find('img.animal-image').attr('data-animate'));
+
+    var favDiv = $("<div>").attr("class", "fav-animal-list");
+    var favIMG = $("<img>");
+
+    // Used the times (X) icon from awesome fonts as the graphic to represent the delete action
+    // The icon will be overlayed in the top left corner of the gif
+    // it is given an attribute with data-index to help delete the correct favorited gif from the localstorage saved array
+    var deleteIcon = $("<p>").html("<i class='fas fa-times'></i>").attr({ class: "deleteicon", "data-index": indexCounter });
+
+    var favSauce = $(this).closest('.animal-list').find('img.animal-image').attr('src');
+    var favStill = $(this).closest('.animal-list').find('img.animal-image').attr('data-still');
+    var favAnimate = $(this).closest('.animal-list').find('img.animal-image').attr('data-animate');
+
+    savedFavorites.push({ "src": favSauce, "datastill": favStill, "dataanimate": favAnimate });
+    console.log(savedFavorites);
+
+    // Put the object into storage
+    localStorage.setItem('favoriteGIFObject', JSON.stringify(savedFavorites));
+
+    // Retrieve the object from storage, mostly used for checking the results in console.log in the next line
+    var retrievedObject = localStorage.getItem("favoriteGIFObject");
+    console.log('retrievedObject: ', JSON.parse(retrievedObject));
+
+    favIMG.attr({
+        "src": favSauce,
+        "class": "animal-image",
+        "data-still": favStill,
+        "data-animate": favAnimate,
+        "data-state": "still"
+    });
+
+    favDiv.append(favIMG);
+    favDiv.append(deleteIcon);
+
+    $("#fav-column").prepend(favDiv);
+
+    indexCounter++;
+
+});
+
+
+// Delete gif function for the favorites section
+$("#fav-column").on("click", ".deleteicon", function () {
+    console.log("delete icon clicked");
+
+    // Variable grabbing the latest object array in Localstorage first
+    var favlist = JSON.parse(localStorage.getItem("favoriteGIFObject"));
+    
+    // Gets the index # for the gif where the user clicked the red X icon
+    var currentIndex = $(this).attr("data-index");
+
+    console.log($(this).attr("data-index"));
+    
+    // deletes the entire div
+    $(this).closest('div').remove();
+
+    // removes same gif that was added as an object in localstorage
+    favlist.splice(currentIndex, 1);
+    
+    // passes the updated local list of objects back into this variable
+    savedFavorites = favlist;
+    console.log("savedFavorites: " + savedFavorites);
+
+    // then pushes that variable to update the list of objects in localstorage
+    localStorage.setItem("favoriteGIFObject", JSON.stringify(favlist));
+});
+
+// Trash can functionality that deletes EVERYTHING in the favorites section and clears out localstorage
+// Also resets indexCounter which is used for the favorites section
+$("#fav-row").on("click", ".fa-trash-alt", function () {
+    console.log("trash icon clicked");
+    $("#fav-column").empty();
+    localStorage.clear();
+
+    indexCounter = 0;
+});
+
+// Function used to display whatever GIFs that the user saved as their favorites in the favorites section from data stored in localstorage 
+function putOnPage() {
+
+    console.log("putOnPage called");
+
+    // empties out the html
+    $("#fav-column").empty(); 
+
+    var insideList = JSON.parse(localStorage.getItem("favoriteGIFObject"));
+
+    // Checks to see if we have any favorites saved in localStorage
+    // If we do, then the for loop will function correctly and appends all the gifs to favorites section
+    // Otherwise set the local insideList variable to an empty array
+    if (!Array.isArray(insideList)) {
+        insideList = [];
+    }
+
+    // render our insideList todos to the page
+    for (var i = 0; i < insideList.length; i++) {
+        console.log("loop #" + i);
+        console.log(insideList[i].src);
+        console.log(insideList[i].dataanimate);
+        console.log(insideList[i].datastill);
+
+        console.log("indexCounter: " + indexCounter);
+
+        var favDiv = $("<div>").attr("class", "fav-animal-list");
+        var favIMG = $("<img>");
+
+        var deleteIcon = $("<p>").html("<i class='fas fa-times'></i>").attr({ class: "deleteicon", "data-index": indexCounter });
+
+        var favSauce = insideList[i].src;
+        var favStill = insideList[i].dataanimate;
+        var favAnimate = insideList[i].datastill;
+
+        //   var p = $("<p>").text(insideList[i]);
+        //   var b = $("<button class='delete'>").text("x").attr("data-index", i);
+        //   p.prepend(b);
+        //   $("#todo-list").prepend(p);
+
+        favIMG.attr({
+            "src": favSauce,
+            "class": "animal-image",
+            "data-still": favStill,
+            "data-animate": favAnimate,
+            "data-state": "still"
+        });
+
+        favDiv.append(favIMG);
+        favDiv.append(deleteIcon);
+
+        $("#fav-column").prepend(favDiv);
+
+        indexCounter++;
+    }
+}
+
+
 $(document).ready(function () {
     console.log("ready!");
     generateExistingAnimalButtons();
 
+    if (!Array.isArray(savedFavorites)) {
+        savedFavorites = [];
+    }
+
+    putOnPage();
+
+
+    // Re-using tooltip hover from unit-4 (TMNT) game
+    var tooltip = $('#tooltip'),
+        offset = {
+            x: 20,
+            y: 20
+        };
+
+    // Mouse hover tooltip 
+    $('.fa-trash-alt').hover(function () {
+        tooltip.show()
+    }, function () {
+        tooltip.hide();
+    }).mousemove(function (e) {
+        tooltip.css({
+            top: e.pageY + offset.y,
+            left: e.pageX + offset.x
+        }).text("Click to empty your favorites.");
+    });
 });
+
